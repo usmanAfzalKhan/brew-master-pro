@@ -229,6 +229,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>brew-entities.edmx</DependentUpon>
     </Compile>
+    <Compile Include="Models\TokenClaim.cs" />
     <Compile Include="Models\User.cs">
       <DependentUpon>brew-entities.tt</DependentUpon>
     </Compile>
