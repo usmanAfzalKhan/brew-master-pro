@@ -5,6 +5,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using System.IO;
+using System.Net.Mail;
+using System.Threading.Tasks;
+using System.Web;
 
 namespace brew_master_pro.Controllers
 {
@@ -12,6 +16,7 @@ namespace brew_master_pro.Controllers
     public class UserController : ApiController
     {
         BrewEntities db = new BrewEntities();
+        Response response = new Response();
 
         [HttpPost, Route("signup")]
         public HttpResponseMessage Signup([FromBody] User user)
@@ -88,6 +93,36 @@ namespace brew_master_pro.Controllers
                 return Request.CreateResponse(HttpStatusCode.OK, result);
             }
             catch (Exception ex)
+            {
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, ex);
+            }
+        }
+        [HttpPost, Route ("updateUserStatus")]
+        [CustomAuthenticationFilter]
+
+        public HttpResponseMessage UpdateUserStatus(User user)
+        {
+            try 
+            {
+                var token = Request.Headers.GetValues("authorization").First();
+                TokenClaim tokenClaim = TokenManager.ValidateToken(token);
+                if(tokenClaim.Role != "admin")
+                {
+                    return Request.CreateResponse(HttpStatusCode.Unauthorized);
+                }
+                User existingUser = db.Users.Find(user.id);
+                if(existingUser == null)
+                {
+                    response.message = "User ID is not found";
+                    return Request.CreateResponse(HttpStatusCode.OK, response);
+                }
+                existingUser.status = user.status;
+                db.Entry(existingUser).State = System.Data.Entity.EntityState.Modified;
+                db.SaveChanges();
+                response.message = "User Status Updated Successfully";
+                return Request.CreateResponse(HttpStatusCode.OK, response);
+            }
+            catch (Exception ex) 
             {
                 return Request.CreateResponse(HttpStatusCode.InternalServerError, ex);
             }
