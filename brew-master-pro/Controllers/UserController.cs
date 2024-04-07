@@ -9,6 +9,9 @@ using System.IO;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using System.Web;
+using System.Runtime.CompilerServices;
+using System.Runtime.Remoting.Messaging;
+using System.Data.Common;
 
 namespace brew_master_pro.Controllers
 {
@@ -157,6 +160,49 @@ namespace brew_master_pro.Controllers
             {
                 return Request.CreateResponse(HttpStatusCode.InternalServerError, ex);
             }
+        }
+
+        private string createEmailBody(string email, string password)
+        {
+            try
+            {
+                string body = string.Empty;
+                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath("/Template/forgot-password.html")))
+                {
+                    body = reader.ReadToEnd();
+                }
+                body = body.Replace("{email}", email);
+                body = body.Replace("{password}", password);
+                body = body.Replace("{frontendUrl}", "http://localhost:4200/");
+                return body;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return null;
+            }
+        }
+
+        [HttpPost, Route("forgotPassword")]
+        public async Task<HttpResponseMessage> ForgotPassword([FromBody] User user)
+        {
+            User existingUser = db.Users.Where(x => x.email == user.email).FirstOrDefault();
+            response.message = "Password sent successfully to your email";
+            if (existingUser == null)
+            {
+                return Request.CreateResponse(HttpStatusCode.OK, response);
+            }
+            var message = new MailMessage();
+            message.To.Add(new MailAddress(user.email));
+            message.Subject = "Password by Brew Master Pro";
+            message.Body = createEmailBody(user.email, existingUser.password);
+            message.IsBodyHtml = true;
+            using (var smtp = new SmtpClient())
+            {
+                await smtp.SendMailAsync(message);
+                await Task.FromResult(0);
+            }
+            return Request.CreateResponse(HttpStatusCode.OK, response);
         }
     }
 }
