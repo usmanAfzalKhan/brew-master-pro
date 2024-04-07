@@ -7,6 +7,7 @@
       <Diagram DiagramId="aa3001df3bd14b40840536121d7faf1f" Name="Diagram1">
         <EntityTypeShape EntityType="BrewModel.User" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
         <EntityTypeShape EntityType="BrewModel.Category" Width="1.5" PointX="3.375" PointY="0.75" />
+        <EntityTypeShape EntityType="BrewModel.Product" Width="1.5" PointX="3.375" PointY="3.75" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>
