@@ -37,5 +37,33 @@ namespace brew_master_pro.Controllers
                 return Request.CreateResponse(HttpStatusCode.InternalServerError, e);
             }
         }
+
+        [HttpPost, Route("login")]
+        public HttpResponseMessage Login([FromBody] User user)
+        {
+            try 
+            {
+                User existingUser = db.Users.Where(u =>(u.email == user.email && u.password == user.password)).FirstOrDefault();
+                if (existingUser != null) 
+                {
+                    if(existingUser.status == "true")
+                    {
+                        return Request.CreateResponse(HttpStatusCode.OK, new { token = TokenManager.GenerateToken(existingUser.email, existingUser.role) });
+                    }
+                    else 
+                    {
+                        return Request.CreateResponse(HttpStatusCode.Unauthorized, new { message = "Wait for Admin Approval" });
+                    }
+                }
+                else
+                {
+                    return Request.CreateResponse(HttpStatusCode.Unauthorized, new { message = "Incorrect Username or Password" });
+                }
+            }
+            catch (Exception e) 
+            {
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, e);
+            }
+        }
     }
 }
