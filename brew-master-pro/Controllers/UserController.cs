@@ -79,13 +79,13 @@ namespace brew_master_pro.Controllers
 
         [HttpGet, Route("getAllUser")]
         [CustomAuthenticationFilter]
-        public HttpResponseMessage GetAllUser() 
+        public HttpResponseMessage GetAllUser()
         {
-            try 
+            try
             {
                 var token = Request.Headers.GetValues("authorization").First();
                 TokenClaim tokenClaim = TokenManager.ValidateToken(token);
-                if(tokenClaim.Role != "admin")
+                if (tokenClaim.Role != "admin")
                 {
                     return Request.CreateResponse(HttpStatusCode.Unauthorized);
                 }
@@ -97,21 +97,21 @@ namespace brew_master_pro.Controllers
                 return Request.CreateResponse(HttpStatusCode.InternalServerError, ex);
             }
         }
-        [HttpPost, Route ("updateUserStatus")]
+        [HttpPost, Route("updateUserStatus")]
         [CustomAuthenticationFilter]
 
         public HttpResponseMessage UpdateUserStatus(User user)
         {
-            try 
+            try
             {
                 var token = Request.Headers.GetValues("authorization").First();
                 TokenClaim tokenClaim = TokenManager.ValidateToken(token);
-                if(tokenClaim.Role != "admin")
+                if (tokenClaim.Role != "admin")
                 {
                     return Request.CreateResponse(HttpStatusCode.Unauthorized);
                 }
                 User existingUser = db.Users.Find(user.id);
-                if(existingUser == null)
+                if (existingUser == null)
                 {
                     response.message = "User ID is not found";
                     return Request.CreateResponse(HttpStatusCode.OK, response);
@@ -122,13 +122,45 @@ namespace brew_master_pro.Controllers
                 response.message = "User Status Updated Successfully";
                 return Request.CreateResponse(HttpStatusCode.OK, response);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
+            {
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, ex);
+            }
+        }
+
+        [HttpPost, Route("changePassword")]
+        [CustomAuthenticationFilter]
+        public HttpResponseMessage ChangePassworded(ChangePassword changePassword)
+        {
+            try
+            {
+                var token = Request.Headers.GetValues("authorization").First();
+                TokenClaim tokenClaim = TokenManager.ValidateToken(token);
+                User existingUser = db.Users.Where(x => x.email == tokenClaim.Email && x.password == changePassword.OldPassword).FirstOrDefault();
+
+
+                if (existingUser != null)
+                {
+                    existingUser.password = changePassword.NewPassword;
+                    db.Entry(existingUser).State = System.Data.Entity.EntityState.Modified;
+                    db.SaveChanges();
+                    response.message = "Password Updated Successfully";
+                    return Request.CreateResponse(HttpStatusCode.OK, response);
+                }
+                else
+                {
+                    response.message = "Incorrecnt Old Password";
+                    return Request.CreateResponse(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (Exception ex)
             {
                 return Request.CreateResponse(HttpStatusCode.InternalServerError, ex);
             }
         }
     }
 }
+
 
 
 
