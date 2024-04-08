@@ -156,6 +156,37 @@ namespace brew_master_pro.Controllers
                 return Request.CreateResponse(HttpStatusCode.InternalServerError, ex);
             }
         }
+
+        [HttpPost, Route("updateProductStatus")]
+        [CustomAuthenticationFilter]
+        public HttpResponseMessage UpdateProductStatus([FromBody] Product product) 
+        {
+            try
+            {
+                var token = Request.Headers.GetValues("authorization").First();
+                TokenClaim tokenClaim = TokenManager.ValidateToken(token);
+                if (tokenClaim.Role != "admin")
+                {
+                    return Request.CreateResponse(HttpStatusCode.Unauthorized);
+                }
+                Product productObj = db.Products.Find(product.id);
+                if (productObj == null)
+                {
+                    response.message = "Product id is not found";
+                    return Request.CreateResponse(HttpStatusCode.OK, response);
+                }
+                productObj.status = product.status;
+                db.Entry(productObj).State = System.Data.Entity.EntityState.Modified;
+                db.SaveChanges();
+                response.message = "Product status successfully updated";
+                return Request.CreateResponse(HttpStatusCode.OK, response);
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, ex);
+            }
+        }
+
     }
 }
 
